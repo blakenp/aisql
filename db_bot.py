@@ -8,11 +8,11 @@ load_dotenv()
 
 print("Running db_bot.py!")
 
-connection_string = "connection-string"
+connection_string = "put your supabase connection string here"
 
 try:
     postgres_conn = psycopg2.connect(connection_string)
-    postgres_cursor = connection.cursor()
+    postgres_cursor = postgres_conn.cursor()
 
     print("Connected to the PostgreSQL database!")
 except Exception as e:
@@ -22,11 +22,24 @@ fdir = os.path.dirname(__file__)
 def getPath(fname):
     return os.path.join(fdir, fname)
 
-setupSqlPath = getPath("setup.sql")
+setupSqlScriptPath = getPath("setup.sql")
+try:
+    with open(setupSqlScriptPath, "r") as sqlFile:
+        setupSqlScript = sqlFile.read()
+    print("Loaded setup.sql schema:")
+except Exception as e:
+    print(f"Error loading setup.sql: {e}")
+    exit(1)
 
 def runSql(query):
-    result = postgres_cursor.execute(query).fetchall()
-    return result
+    try:
+        postgres_cursor.execute(query)
+        result = postgres_cursor.fetchall()
+        postgres_conn.commit()
+        return result
+    except Exception as e:
+        postgres_conn.rollback()
+        raise e
 
 # OPENAI
 configPath = getPath("config.json")
@@ -53,24 +66,42 @@ def getChatGptResponse(content):
 
 
 # strategies
-commonSqlOnlyRequest = " Give me a sqlite select statement that answers the question. Only respond with sqlite syntax. If there is an error do not expalin it!"
+commonSqlOnlyRequest = "Give me a sqlite select statement that answers the question. Only respond with sqlite syntax. If there is an error do not explain it!"
+# Double-shot strategy with example
 strategies = {
-    "zero_shot": setupSqlScript + commonSqlOnlyRequest,
-    "single_domain_double_shot": (setupSqlScript + 
-                   " Who doesn't have a way for us to text them? " + 
-                   " \nSELECT p.person_id, p.name\nFROM person p\nLEFT JOIN phone ph ON p.person_id = ph.person_id AND ph.can_recieve_sms = 1\nWHERE ph.phone_id IS NULL;\n " +
-                   commonSqlOnlyRequest)
+    "zero_shot": (
+        "SQL Schema:\n"
+        + setupSqlScript + "\n"
+        + commonSqlOnlyRequest
+    ),
+    "single_domain_double_shot": (
+        "SQL Schema:\n"
+        + setupSqlScript
+        + "\n"
+        + "\nExample question: In which room is the Amulet of Wisdom?\n"
+        + "Example SQL:\n"
+        + "```sql\n"
+        + "SELECT r.room_id, r.name\n"
+        + "FROM public.room r\n"
+        + "JOIN public.room_belongings rb ON r.room_id = rb.room_id\n"
+        + "JOIN public.item i ON rb.item_id = i.item_id\n"
+        + "WHERE i.name = 'Amulet of Wisdom';\n"
+        + "```\n"
+        + "Now answer this question in this format: "
+        + commonSqlOnlyRequest
+    )
 }
 
 questions = [
     "Which players have items",
     "Which room as multiple monsters in it?",
-    "Which of the monsters has more attack power?",
+    "Which of the monsters currently in a room has the most attack power?",
     "Which rooms still have their lights turned on?",
     "What are all the rooms that currently have players in them?",
     "Which items still haven't been collected by players yet?",
     "Which ability has the highest danger level?",
-    "Which room has nothing in it?"
+    "Which room has no players in it?",
+    "Which rooms have ghosts in them and what are the ghost's names and favorite foods?"
     # "I need insert sql into my tables can you provide good unique data?"
 ]
 

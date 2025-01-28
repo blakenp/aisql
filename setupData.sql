@@ -46,8 +46,9 @@ INSERT INTO public.monster_ability (id, monster_id, ability_id, created_at) VALU
 
 INSERT INTO public.room_belongings (id, room_id, player_id, item_id, monster_id, ghost_id, created_at) VALUES
 (1, 1, 1, 1, NULL, NULL, now()),
-(2, 2, NULL, NULL, 1, NULL, now()),
+(2, 2, 3, 5, 1, NULL, now()),
 (3, 3, 2, NULL, NULL, 1, now()),
-(4, 4, NULL, NULL, NULL, NULL, now()),
-(5, 5, 6, NULL, NULL, NULL, now()),
-(6, 2, NULL, NULL, 2, NULL, now());
+(4, 4, 4, NULL, NULL, NULL, now()), 
+(5, 5, 6, 3, NULL, NULL, now()),
+(6, 2, NULL, 4, 2, NULL, now()),
+(7, 1, 5, NULL, NULL, NULL, now()); 
