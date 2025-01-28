@@ -25,7 +25,7 @@
     },
     {
       "question": "Which rooms still have their lights turned on?",
-      "sql": "ite\nSELECT r.room_id, r.name\nFROM room r\nWHERE r.lights_on = 1;\n",
+      "sql": "SELECT r.room_id, r.name\nFROM room r\nWHERE r.lights_on = 1;\n",
       "queryRawResponse": "[(2, 'Fire Golem', 20.0, 2, 'Dungeon')]",
       "friendlyResponse": "The Fire Golem in Room 2 has the highest attack power of 20.0.",
       "error": "syntax error at or near \"ite\"\nLINE 1: ite\n        ^\n"
