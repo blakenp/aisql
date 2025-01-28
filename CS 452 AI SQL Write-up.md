@@ -1,4 +1,6 @@
 # Spooky Mansion AI SQL Project
+## GitHub
+You can find the source code for this project [here](https://github.com/blakenp/aisql)
 ## Schema Summary
 Essentially, I just made an SQL schema that models a game with players that explore a spooky mansion and can collect items and escape to get to the next floor. They also encounter monsters with abilities and ghosts that can attack them, and they work together to get to the next floor of rooms.
 
@@ -166,7 +168,7 @@ I tried a nice handful of questions for querying my database involving things li
 I tried just 2 prompting strategies (*zero-shot prompting and single-domain-double-shot prompting*). The *single-domain-double-shot prompting* did do slightly better, not in terms of accuracy, but just slightly more detailed responses, but overall the 2 prompting methods did about the same. I think there may have been a bigger gap between the two if I would have had slightly more complex queries to run, or I could have tried a *multi-shot* approach to give a wide variety of example questions, sql output, etc.
 ### Query That Went Well
 #### Question
-*Which rooms have ghosts in them and what are the ghost's names and favorite foods?"*
+*"Which rooms have ghosts in them and what are the ghost's names and favorite foods?"*
 #### GPT SQL Output
 ```sql
 SELECT r.room_id, r.name, g.name AS ghost_name, g.favorite_food
@@ -178,32 +180,36 @@ JOIN ghost g ON rb.ghost_id = g.ghost_id;
 *"\[(3, 'Library', 'Spooky Sally', 'Haunted Honeycakes')\]"*
 #### Friendly NLQ Response
 *"The Library has a ghost named Spooky Sally who loves Haunted Honeycakes."*
-### Query That Didn't Go Too Well
+### Queries That Didn't Go Too Well
 I actually have 2 that didn't go well. One that constantly errored (although if I provided a good example prompt for this I don't believe this would have been the case), and another one that didn't correctly do the right query.
+
+The second question listed below says no room has players in it, but in reality the only room that doesn't have players in it is the Dungeon.
 #### Question 1
-*Which rooms have ghosts in them and what are the ghost's names and favorite foods?"*
+*"Which rooms still have their lights turned on?"*
 #### GPT SQL Output
 ```sql
-SELECT r.room_id, r.name, g.name AS ghost_name, g.favorite_food
+SELECT r.room_id, r.name
 FROM room r
-JOIN room_belongings rb ON r.room_id = rb.room_id
-JOIN ghost g ON rb.ghost_id = g.ghost_id;
+WHERE r.lights_on = 1;
 ```
 #### queryRawResponse
 *"\[(3, 'Library', 'Spooky Sally', 'Haunted Honeycakes')\]"*
 #### Friendly NLQ Response
-*"The Library has a ghost named Spooky Sally who loves Haunted Honeycakes."*
+*"N/A Due To Error"*
+#### Error
+*"operator does not exist: boolean = integer\nLINE 4: WHERE lights_on = 1;\n                        ^\nHINT:  No operator matches the given name and argument types. You might need to add explicit type casts.\n"*
 #### Question 2
-*Which rooms have ghosts in them and what are the ghost's names and favorite foods?"*
+*"Which room has no players in it?"*
 #### GPT SQL Output
 ```sql
-SELECT r.room_id, r.name, g.name AS ghost_name, g.favorite_food
+SELECT r.room_id, r.name
 FROM room r
-JOIN room_belongings rb ON r.room_id = rb.room_id
-JOIN ghost g ON rb.ghost_id = g.ghost_id;
+LEFT JOIN room_belongings rb ON r.room_id = rb.room_id AND rb.player_id IS NOT NULL
+WHERE rb.player_id IS NULL;
 ```
 #### queryRawResponse
-*"\[(3, 'Library', 'Spooky Sally', 'Haunted Honeycakes')\]"*
+*"\[\]"*
 #### Friendly NLQ Response
-*"The Library has a ghost named Spooky Sally who loves Haunted Honeycakes."*
+*"No room has players in it."*
 ## Conclusion
+Overall, setting up ChatGPT API for answering simple queries involving simple SQL statements that GPT must output is relatively simple, but more robust prompt engineering along with other things needs to be done in order to help LLMs learn better how to write correct queries for more complex queries and answer according to a user's question in natural language accurately.
