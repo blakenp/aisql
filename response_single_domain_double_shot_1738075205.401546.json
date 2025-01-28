@@ -28,7 +28,7 @@
       "sql": "SELECT r.room_id, r.name\nFROM room r\nWHERE r.lights_on = 1;\n",
       "queryRawResponse": "[(2, 'Fire Golem', 20.0, 2, 'Dungeon')]",
       "friendlyResponse": "The Fire Golem in Room 2 has the highest attack power of 20.0.",
-      "error": "syntax error at or near \"ite\"\nLINE 1: ite\n        ^\n"
+      "error": "operator does not exist: boolean = integer\nLINE 4: WHERE lights_on = 1;\n                        ^\nHINT:  No operator matches the given name and argument types. You might need to add explicit type casts.\n"
     },
     {
       "question": "What are all the rooms that currently have players in them?",
